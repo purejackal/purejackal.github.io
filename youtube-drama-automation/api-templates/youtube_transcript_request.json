@@ -1,0 +1,89 @@
+{
+  "template_name": "YouTube Transcript API 요청 템플릿",
+  "version": "1.0.0",
+  "description": "YouTube 영상의 자막/대본을 추출하는 API 요청 템플릿",
+  "endpoint": {
+    "url": "https://youtube-transcript-api.example.com/transcript",
+    "method": "POST",
+    "content_type": "application/json"
+  },
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer {{YOUR_API_KEY}}",
+    "Accept": "application/json"
+  },
+  "request_body": {
+    "video_url": "{{youtube_url}}",
+    "language": "ja",
+    "format": "text",
+    "include_timestamps": false,
+    "merge_lines": true
+  },
+  "alternative_apis": [
+    {
+      "name": "YouTube Data API v3",
+      "endpoint": "https://www.googleapis.com/youtube/v3/captions",
+      "note": "공식 API, API 키 필요"
+    },
+    {
+      "name": "youtube-transcript-api (Python)",
+      "endpoint": "자체 서버에서 호스팅",
+      "note": "오픈소스, 별도 설치 필요"
+    },
+    {
+      "name": "RapidAPI YouTube Transcript",
+      "endpoint": "https://youtube-transcript1.p.rapidapi.com/",
+      "note": "유료 서비스, 안정적"
+    }
+  ],
+  "response_format": {
+    "success": {
+      "status": 200,
+      "body": {
+        "video_id": "dQw4w9WgXcQ",
+        "title": "영상 제목",
+        "transcript": "전체 대본 텍스트...",
+        "language": "ja",
+        "duration": 300,
+        "word_count": 1500
+      }
+    },
+    "error": {
+      "status": 400,
+      "body": {
+        "error": "No transcript available",
+        "message": "이 영상에는 자막이 없습니다.",
+        "video_id": "dQw4w9WgXcQ"
+      }
+    }
+  },
+  "error_handling": {
+    "no_transcript": {
+      "action": "오류 로그에 기록 후 다음 영상 처리",
+      "message": "자막 없음"
+    },
+    "private_video": {
+      "action": "오류 로그에 기록",
+      "message": "비공개 영상"
+    },
+    "api_limit": {
+      "action": "5분 대기 후 재시도",
+      "message": "API 한도 초과"
+    }
+  },
+  "make_com_integration": {
+    "module": "http:makeRequest",
+    "configuration": {
+      "url": "{{endpoint.url}}",
+      "method": "{{endpoint.method}}",
+      "headers": "{{headers}}",
+      "body": "{{stringify(request_body)}}"
+    },
+    "output_mapping": {
+      "transcript": "{{data.transcript}}",
+      "video_id": "{{data.video_id}}",
+      "title": "{{data.title}}"
+    }
+  },
+  "example_curl": "curl -X POST https://youtube-transcript-api.example.com/transcript \\\n  -H 'Content-Type: application/json' \\\n  -H 'Authorization: Bearer YOUR_API_KEY' \\\n  -d '{\n    \"video_url\": \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\",\n    \"language\": \"ja\",\n    \"format\": \"text\"\n  }'"
+}

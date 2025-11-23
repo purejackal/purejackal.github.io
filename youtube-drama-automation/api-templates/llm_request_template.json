@@ -1,0 +1,182 @@
+{
+  "template_name": "LLM API 요청 템플릿",
+  "version": "1.0.0",
+  "description": "와비사비 각색 및 SEO 생성을 위한 LLM API 요청 템플릿",
+  "supported_providers": [
+    "OpenAI",
+    "Anthropic Claude",
+    "Google Gemini",
+    "Cohere"
+  ],
+  "openai_config": {
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{OPENAI_API_KEY}}"
+    },
+    "request_body": {
+      "model": "gpt-4",
+      "messages": [
+        {
+          "role": "system",
+          "content": "{{SYSTEM_PROMPT}}"
+        },
+        {
+          "role": "user",
+          "content": "{{USER_INPUT}}"
+        }
+      ],
+      "temperature": 0.7,
+      "max_tokens": 3000,
+      "top_p": 1,
+      "frequency_penalty": 0,
+      "presence_penalty": 0
+    }
+  },
+  "anthropic_config": {
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "x-api-key": "{{ANTHROPIC_API_KEY}}",
+      "anthropic-version": "2023-06-01"
+    },
+    "request_body": {
+      "model": "claude-3-5-sonnet-20241022",
+      "max_tokens": 4000,
+      "temperature": 0.7,
+      "system": "{{SYSTEM_PROMPT}}",
+      "messages": [
+        {
+          "role": "user",
+          "content": "{{USER_INPUT}}"
+        }
+      ]
+    }
+  },
+  "use_cases": {
+    "wabisabi_adaptation": {
+      "description": "RAW 대본을 와비사비 드라마로 각색",
+      "system_prompt_file": "prompts/wabisabi_script_prompt.txt",
+      "user_input": "{{RAW_TRANSCRIPT}}",
+      "recommended_model": "gpt-4 또는 claude-3-5-sonnet",
+      "temperature": 0.7,
+      "max_tokens": 3000
+    },
+    "seo_generation": {
+      "description": "와비사비 대본 기반 SEO 메타데이터 생성",
+      "system_prompt_file": "prompts/seo_generation_prompt.txt",
+      "user_input": "{{WABISABI_SCRIPT}}",
+      "recommended_model": "gpt-4 또는 claude-3-5-sonnet",
+      "temperature": 0.5,
+      "max_tokens": 1500
+    }
+  },
+  "response_format": {
+    "openai": {
+      "path_to_content": "choices[0].message.content",
+      "example": {
+        "id": "chatcmpl-xxx",
+        "object": "chat.completion",
+        "created": 1234567890,
+        "model": "gpt-4",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "생성된 텍스트..."
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 500,
+          "total_tokens": 600
+        }
+      }
+    },
+    "anthropic": {
+      "path_to_content": "content[0].text",
+      "example": {
+        "id": "msg_xxx",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "생성된 텍스트..."
+          }
+        ],
+        "model": "claude-3-5-sonnet-20241022",
+        "stop_reason": "end_turn",
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 500
+        }
+      }
+    }
+  },
+  "make_com_integration": {
+    "openai_module": {
+      "module": "openai:createCompletion",
+      "version": 1,
+      "parameters": {
+        "model": "gpt-4",
+        "messages": [
+          {
+            "role": "system",
+            "content": "{{LOAD_PROMPT_FILE}}"
+          },
+          {
+            "role": "user",
+            "content": "{{INPUT_DATA}}"
+          }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 3000
+      }
+    },
+    "anthropic_module": {
+      "note": "Make.com에서 HTTP 모듈 사용",
+      "module": "http:makeRequest",
+      "configuration": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "headers": {
+          "x-api-key": "{{ANTHROPIC_API_KEY}}",
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json"
+        },
+        "body": "{{stringify(anthropic_config.request_body)}}"
+      }
+    }
+  },
+  "cost_optimization": {
+    "tips": [
+      "GPT-4는 고품질이지만 비용이 높음 → GPT-3.5-turbo로 테스트 후 전환 고려",
+      "Claude 3.5 Sonnet은 성능 대비 비용 효율적",
+      "max_tokens를 적절히 제한하여 비용 절감",
+      "temperature를 낮춰 일관성 향상 (SEO 생성 시 0.5 권장)"
+    ],
+    "recommended_workflow": {
+      "development": "GPT-3.5-turbo 또는 Claude Haiku",
+      "production": "GPT-4 또는 Claude 3.5 Sonnet"
+    }
+  },
+  "error_handling": {
+    "rate_limit": {
+      "action": "60초 대기 후 재시도",
+      "max_retries": 3
+    },
+    "invalid_response": {
+      "action": "오류 로그 기록 후 다음 단계 스킵"
+    },
+    "timeout": {
+      "action": "타임아웃 시간 연장 후 재시도",
+      "timeout_value": "120초"
+    }
+  }
+}

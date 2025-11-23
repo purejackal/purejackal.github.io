@@ -1,0 +1,188 @@
+{
+  "spreadsheet_name": "YouTube 와비사비 드라마 자동화",
+  "sheets": [
+    {
+      "sheet_name": "대기중_영상",
+      "description": "처리 대기 중인 YouTube URL 목록",
+      "columns": [
+        {
+          "name": "row_id",
+          "type": "number",
+          "description": "행 ID (자동 생성)",
+          "example": "1"
+        },
+        {
+          "name": "youtube_url",
+          "type": "text",
+          "description": "YouTube 영상 URL",
+          "example": "https://www.youtube.com/watch?v=xxxxx",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "description": "처리 상태",
+          "example": "대기중 / 처리중 / 완료 / 오류",
+          "required": true
+        },
+        {
+          "name": "added_at",
+          "type": "datetime",
+          "description": "추가 시간",
+          "example": "2025-11-23 10:30:00"
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "description": "메모",
+          "example": "특별 처리 필요"
+        }
+      ],
+      "default_values": {
+        "status": "대기중",
+        "added_at": "=NOW()"
+      }
+    },
+    {
+      "sheet_name": "완성_대본",
+      "description": "완성된 와비사비 드라마 대본 및 SEO 데이터",
+      "columns": [
+        {
+          "name": "row_id",
+          "type": "number",
+          "description": "행 ID"
+        },
+        {
+          "name": "youtube_url",
+          "type": "text",
+          "description": "원본 YouTube URL"
+        },
+        {
+          "name": "raw_transcript",
+          "type": "text",
+          "description": "원본 대본 (RAW)"
+        },
+        {
+          "name": "wabisabi_script",
+          "type": "text",
+          "description": "와비사비 스타일 각색 대본"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "description": "메인 제목"
+        },
+        {
+          "name": "subtitle",
+          "type": "text",
+          "description": "부제목"
+        },
+        {
+          "name": "short_description",
+          "type": "text",
+          "description": "짧은 설명 (100~150자)"
+        },
+        {
+          "name": "full_description",
+          "type": "text",
+          "description": "전체 설명 (300~500자)"
+        },
+        {
+          "name": "tags",
+          "type": "text",
+          "description": "태그 (쉼표로 구분)"
+        },
+        {
+          "name": "keywords",
+          "type": "text",
+          "description": "키워드 (쉼표로 구분)"
+        },
+        {
+          "name": "hashtags",
+          "type": "text",
+          "description": "해시태그 (공백으로 구분)"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "description": "카테고리"
+        },
+        {
+          "name": "target_audience",
+          "type": "text",
+          "description": "타겟 오디언스"
+        },
+        {
+          "name": "emotional_hook",
+          "type": "text",
+          "description": "핵심 감정 포인트"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "description": "처리 상태"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "description": "완성 시간"
+        }
+      ]
+    },
+    {
+      "sheet_name": "오류_로그",
+      "description": "처리 중 발생한 오류 기록",
+      "columns": [
+        {
+          "name": "row_id",
+          "type": "number",
+          "description": "행 ID"
+        },
+        {
+          "name": "youtube_url",
+          "type": "text",
+          "description": "오류 발생 URL"
+        },
+        {
+          "name": "error_message",
+          "type": "text",
+          "description": "오류 메시지"
+        },
+        {
+          "name": "error_step",
+          "type": "text",
+          "description": "오류 발생 단계"
+        },
+        {
+          "name": "error_time",
+          "type": "datetime",
+          "description": "오류 발생 시간"
+        },
+        {
+          "name": "retry_count",
+          "type": "number",
+          "description": "재시도 횟수"
+        }
+      ]
+    }
+  ],
+  "setup_instructions": [
+    "1. Google Sheets에서 새 스프레드시트 생성",
+    "2. 위 3개 시트(대기중_영상, 완성_대본, 오류_로그) 생성",
+    "3. 각 시트에 columns에 명시된 헤더 추가",
+    "4. '대기중_영상' 시트에 YouTube URL 입력",
+    "5. status 열은 '대기중'으로 설정",
+    "6. Make.com에서 Google Sheets 연결",
+    "7. Spreadsheet ID를 blueprint.json에 입력"
+  ],
+  "data_validation": {
+    "youtube_url": {
+      "rule": "URL",
+      "pattern": "^https://www\\.youtube\\.com/watch\\?v=.+$"
+    },
+    "status": {
+      "rule": "LIST",
+      "values": ["대기중", "처리중", "완료", "오류"]
+    }
+  }
+}

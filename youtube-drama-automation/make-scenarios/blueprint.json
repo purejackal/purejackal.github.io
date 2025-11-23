@@ -1,0 +1,230 @@
+{
+  "name": "YouTube → 와비사비 드라마 자동 생성",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:searchRows",
+      "version": 1,
+      "parameters": {
+        "spreadsheetId": "{{YOUR_SPREADSHEET_ID}}",
+        "sheetName": "대기중_영상",
+        "query": "status = '대기중'"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "spreadsheetId",
+            "type": "text",
+            "label": "Spreadsheet ID",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:makeRequest",
+      "version": 3,
+      "parameters": {
+        "url": "https://youtube-transcript-api.example.com/transcript",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{YOUR_API_KEY}}"
+          }
+        ],
+        "body": "{\"video_url\": \"{{1.youtube_url}}\"}"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {},
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "openai:createCompletion",
+      "version": 1,
+      "parameters": {
+        "model": "gpt-4",
+        "messages": [
+          {
+            "role": "system",
+            "content": "{{LOAD_PROMPT:wabisabi_script_prompt.txt}}"
+          },
+          {
+            "role": "user",
+            "content": "{{2.data.transcript}}"
+          }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 3000
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "model",
+            "type": "select",
+            "label": "Model",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "openai:createCompletion",
+      "version": 1,
+      "parameters": {
+        "model": "gpt-4",
+        "messages": [
+          {
+            "role": "system",
+            "content": "{{LOAD_PROMPT:seo_generation_prompt.txt}}"
+          },
+          {
+            "role": "user",
+            "content": "{{3.choices[0].message.content}}"
+          }
+        ],
+        "temperature": 0.5,
+        "max_tokens": 1500
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 5,
+      "module": "json:parseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{4.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {},
+        "expect": [
+          {
+            "name": "json",
+            "type": "text",
+            "label": "JSON string",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:updateRow",
+      "version": 1,
+      "parameters": {
+        "spreadsheetId": "{{YOUR_SPREADSHEET_ID}}",
+        "sheetName": "완성_대본",
+        "valueInputOption": "USER_ENTERED"
+      },
+      "mapper": {
+        "rowId": "{{1.row_id}}",
+        "values": {
+          "youtube_url": "{{1.youtube_url}}",
+          "raw_transcript": "{{2.data.transcript}}",
+          "wabisabi_script": "{{3.choices[0].message.content}}",
+          "title": "{{5.title}}",
+          "subtitle": "{{5.subtitle}}",
+          "short_description": "{{5.short_description}}",
+          "full_description": "{{5.full_description}}",
+          "tags": "{{join(5.tags, ', ')}}",
+          "keywords": "{{join(5.keywords, ', ')}}",
+          "hashtags": "{{join(5.hashtags, ' ')}}",
+          "category": "{{5.category}}",
+          "target_audience": "{{5.target_audience}}",
+          "emotional_hook": "{{5.emotional_hook}}",
+          "status": "완료",
+          "created_at": "{{now}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 7,
+      "module": "telegram:sendMessage",
+      "version": 1,
+      "parameters": {
+        "chatId": "{{YOUR_TELEGRAM_CHAT_ID}}"
+      },
+      "mapper": {
+        "text": "✅ 새로운 와비사비 드라마 완성!\n\n제목: {{5.title}}\n카테고리: {{5.category}}\n상태: 완료"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {}
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schema_name": "YouTube 입력 데이터 스키마",
+  "version": "1.0.0",
+  "description": "Make.com에서 처리할 YouTube 입력 데이터 구조",
+  "input_format": {
+    "youtube_url": {
+      "type": "string",
+      "required": true,
+      "format": "url",
+      "pattern": "^https://www\\.youtube\\.com/watch\\?v=[A-Za-z0-9_-]{11}$",
+      "description": "YouTube 영상 URL",
+      "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    "video_id": {
+      "type": "string",
+      "required": false,
+      "pattern": "^[A-Za-z0-9_-]{11}$",
+      "description": "YouTube 영상 ID (URL에서 자동 추출 가능)",
+      "example": "dQw4w9WgXcQ"
+    },
+    "language": {
+      "type": "string",
+      "required": false,
+      "default": "ja",
+      "enum": ["ja", "ko", "en"],
+      "description": "자막 언어 코드"
+    },
+    "priority": {
+      "type": "string",
+      "required": false,
+      "default": "normal",
+      "enum": ["low", "normal", "high", "urgent"],
+      "description": "처리 우선순위"
+    }
+  },
+  "validation_rules": [
+    {
+      "field": "youtube_url",
+      "rule": "required",
+      "message": "YouTube URL은 필수입니다."
+    },
+    {
+      "field": "youtube_url",
+      "rule": "url_format",
+      "message": "유효한 YouTube URL 형식이 아닙니다."
+    },
+    {
+      "field": "language",
+      "rule": "supported_language",
+      "message": "지원하지 않는 언어입니다."
+    }
+  ],
+  "extraction_pattern": {
+    "video_id_from_url": {
+      "regex": "(?:youtube\\.com/watch\\?v=|youtu\\.be/)([A-Za-z0-9_-]{11})",
+      "group": 1,
+      "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ → dQw4w9WgXcQ"
+    }
+  },
+  "example_valid_input": {
+    "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "video_id": "dQw4w9WgXcQ",
+    "language": "ja",
+    "priority": "normal"
+  },
+  "example_minimal_input": {
+    "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  }
+}
